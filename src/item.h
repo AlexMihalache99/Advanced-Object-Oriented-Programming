@@ -2,7 +2,7 @@
 // CSC371 Advanced Object Oriented Programming (2021/22)
 // Department of Computer Science, Swansea University
 //
-// Author: 984174
+// Author: 986965
 //
 // Canvas: https://canvas.swansea.ac.uk/courses/24793
 // -----------------------------------------------------
@@ -18,7 +18,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <sstream>
-#include "../src/lib_json.hpp"
+#include "lib_json.hpp"
 
 using json = nlohmann::json;
 

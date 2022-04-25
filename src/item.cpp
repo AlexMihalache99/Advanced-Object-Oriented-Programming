@@ -2,7 +2,7 @@
 // CSC371 Advanced Object Oriented Programming (2021/22)
 // Department of Computer Science, Swansea University
 //
-// Author: 984174
+// Author: 986965
 //
 // Canvas: https://canvas.swansea.ac.uk/courses/24793
 // -----------------------------------------------------
@@ -33,12 +33,6 @@ Item::~Item(){}
 
 const unsigned int Item::size() const
 {
-    // return 0;
-    
-    // unsigned int count = 0;
-    // for (auto it = this->entries.begin(); it != this->entries.end(); it++) {
-    //     count+=1;
-    // }
     return this->entries.size();
 }
 
@@ -115,14 +109,19 @@ bool Item::addEntry(const std::string &key, const std::string &value)
 
 const std::string &Item::getEntry(const std::string &key)
 {
-    // return "";
     auto alreadyExisted = this->entries.find(key);
 
     if(alreadyExisted != this->entries.end()) {
 
         return this->entries[key];
     } else {
-        throw std::out_of_range("action");
+
+        if(key.length() != 0){
+            throw std::out_of_range("Error: invalid entry argument(s).");
+        } else {
+            throw std::invalid_argument("Error: missing entry argument(s).");
+        }
+        
     }
 }
 
@@ -176,7 +175,7 @@ bool operator==(const Item& lhs, const Item& rhs)
 //  std::string s = iObj.str();
 const std::string Item::str() const
 {
-    json j = this->entries;
+    json j(this->entries);
 
     return j.dump();
 }

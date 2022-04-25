@@ -2,7 +2,7 @@
 // CSC371 Advanced Object Oriented Programming (2021/22)
 // Department of Computer Science, Swansea University
 //
-// Author: 984174
+// Author: 986965
 //
 // Canvas: https://canvas.swansea.ac.uk/courses/24793
 // -----------------------------------------------------
@@ -58,12 +58,13 @@ const bool Wallet::empty() const
 //  wObj.newCategory("categoryIdent");
 Category &Wallet::newCategory(const std::string &categoryIdent)
 {
+    //check if the category already exists
     const auto &it = std::find_if(this->categories.begin(),
                                  this->categories.end(), 
-                                 [&categoryIdent](Category &current)
-                                    { 
-                                        return current.getIdent() == categoryIdent;
-                                    });
+                                 [&categoryIdent](Category &currentCategory)
+                                { 
+                                    return currentCategory.getIdent() == categoryIdent;
+                                });
 
     if(it != this->categories.end()) {
         return *it;
@@ -78,11 +79,12 @@ Category &Wallet::newCategory(const std::string &categoryIdent)
 
         this->categories.push_back(categoryToAdd);
 
+        //checks if the category has been added
         const auto &itNew = std::find_if(this->categories.begin(),
                                 this->categories.end(), 
-                                [&categoryIdent](Category &current)
+                                [&categoryIdent](Category &currentCategory)
                                 { 
-                                    return current.getIdent() == categoryIdent;
+                                    return currentCategory.getIdent() == categoryIdent;
                                 });
 
 
@@ -103,15 +105,15 @@ Category &Wallet::newCategory(const std::string &categoryIdent)
 //  wObj.addCategory(cObj);
 bool Wallet::addCategory(const Category &categoryToAdd)
 {
+    //checks if the category alredy exists
     const auto &it = std::find_if(this->categories.begin(),
                                  this->categories.end(), 
-                                 [&categoryToAdd](Category &current)
+                                 [&categoryToAdd](Category &currentCategory)
                                     { 
-                                        return current.getIdent() == categoryToAdd.getIdent();
+                                        return currentCategory.getIdent() == categoryToAdd.getIdent();
                                     });
 
     if(it != this->categories.end()) {
-
         for(const auto &currentValue : categoryToAdd.getItems()) {
             (*it).addItem(currentValue);
         }
@@ -135,17 +137,24 @@ bool Wallet::addCategory(const Category &categoryToAdd)
 //  auto cObj = wObj.getCategory("categoryIdent");
 Category &Wallet::getCategory(const std::string &categoryToRetrieve)
 {
+    //checks if the category exists
     const auto &it = std::find_if(this->categories.begin(),
                                  this->categories.end(), 
-                                 [&categoryToRetrieve](Category &current)
+                                 [&categoryToRetrieve](Category &currentCategory)
                                     { 
-                                        return current.getIdent() == categoryToRetrieve;
+                                        return currentCategory.getIdent() == categoryToRetrieve;
                                     });
 
     if(it != this->categories.end()) {
         return *it;
     } else {
-        throw std::out_of_range("action");
+
+        if(categoryToRetrieve.length() != 0){
+            throw std::out_of_range("Error: invalid category argument(s).");
+        } else {
+             throw std::invalid_argument("Error: missing category argument(s).");
+        }
+        
     }
 }
 
@@ -159,11 +168,12 @@ Category &Wallet::getCategory(const std::string &categoryToRetrieve)
 //  wObj.deleteCategory("categoryIdent");
 bool Wallet::deleteCategory(const std::string &categoryToDelete)
 {
+    //checks if the category exists
     const auto &it = std::find_if(this->categories.begin(),
                                  this->categories.end(), 
-                                 [&categoryToDelete](Category &current)
+                                 [&categoryToDelete](Category &currentCategory)
                                     { 
-                                        return current.getIdent() == categoryToDelete;
+                                        return currentCategory.getIdent() == categoryToDelete;
                                     });
 
     if(it != this->categories.end()) {
@@ -287,11 +297,11 @@ void Wallet::save(const std::string &fileName)
         std::exit(1);
     }
 
-    j = str();
+    j = json::parse(str());
 
-    std::cout << "\n\n" << j.dump() << "\n\n";
+    // std::cout << "\n\n" << j.dump() << "\n\n";
 
-    dbFile << j << std::endl;
+    dbFile << j;
 }
 
 // TODO Write an == operator overload for the Wallet class, such that two
@@ -325,14 +335,7 @@ const std::string Wallet::str() const
     json j;
 
     for(const auto &currentValueCategory: this->categories) {
-        // json j_items(currentValue.getItems());
-        for(auto &currentValueItem: currentValueCategory.getItems()) {
-           j[currentValueItem.getIdent()] = currentValueItem.getEntries();
-        }
-
-        // j[currentValue.getIdent()] = currentValue.str();
-
-        // j[currentValue.getIdent()] = json::parse(currentValue.getItems());
+           j[currentValueCategory.getIdent()] = json::parse(currentValueCategory.str());
     }
 
     return j.dump();

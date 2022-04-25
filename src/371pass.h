@@ -2,7 +2,7 @@
 // CSC371 Advanced Object Oriented Programming (2021/22)
 // Department of Computer Science, Swansea University
 //
-// Author: 984174
+// Author: 986965
 //
 // Canvas: https://canvas.swansea.ac.uk/courses/24793
 // -----------------------------------------------------
@@ -21,7 +21,7 @@
 namespace App {
 
 // TODO: Enter your student number here!
-const std::string STUDENT_NUMBER = "984174";
+const std::string STUDENT_NUMBER = "986965";
 
 // Enums (short for enumerations) are similar to their Java implementation.
 // It is a user-defined type, used to assign names to internal constants
@@ -47,6 +47,7 @@ int run(int argc, char *argv[]);
 cxxopts::Options cxxoptsSetup();
 
 App::Action parseActionArgument(cxxopts::ParseResult &args);
+
 
 std::string getJSON(Wallet &w);
 std::string getJSON(Wallet &w, const std::string &c);

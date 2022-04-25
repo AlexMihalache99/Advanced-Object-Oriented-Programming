@@ -2,7 +2,7 @@
 // CSC371 Advanced Object Oriented Programming (2021/22)
 // Department of Computer Science, Swansea University
 //
-// Author: 984174
+// Author: 986965
 //
 // Canvas: https://canvas.swansea.ac.uk/courses/24793
 // -----------------------------------------------------
@@ -46,30 +46,220 @@ int App::run(int argc, char *argv[]) {
 
   // Open the database and construct the Wallet
   const std::string db = args["db"].as<std::string>();
-  // Wallet wObj{};
+  Wallet wObj{};
   // Only uncomment this once you have implemented the load function!
-  // wObj.load(db);
+  wObj.load(db);
 
+  try{
   const Action a = parseActionArgument(args);
   switch (a) {
-  case Action::CREATE:
-    throw std::runtime_error("create not implemented");
-    break;
+  case Action::CREATE:{
+    try{
+    std::string category = args.count("category") ? args["category"].as<std::string>() : "";
+    std::string item = args.count("item") ? args["item"].as<std::string>() : "";
+    std::string entry = args.count("entry") ? args["entry"].as<std::string>() : "";
 
-  case Action::READ:
-    throw std::runtime_error("read not implemented");
-    break;
+    if(category.empty() && item.empty() && entry.empty()){
+    std::cerr<< "Error: missing category, item or entry argument(s)."<<std::endl;
+    std::exit(1);
+    } else if(!category.empty() && item.empty() && entry.empty()){
+      wObj.newCategory(category);
+      wObj.save(db);
+    } else if(!category.empty() && !item.empty() && entry.empty()){
+      wObj.newCategory(category).newItem(item);
+      wObj.save(db);
+    } else {
+      std::string delimiter = ",";
 
-  case Action::UPDATE:
-    throw std::runtime_error("update not implemented");
-    break;
+      if(entry.find(delimiter)!=std::string::npos){
+      std::string key = entry.substr(0, entry.find(delimiter));
+      std::string value = entry.substr(entry.find(delimiter) + 1, entry.size());
+      wObj.newCategory(category).newItem(item).addEntry(key, value);
+      wObj.save(db);
+      }
+    }
+  } catch(std::exception &e){
+     std::cerr << e.what() << std::endl;
+     std::exit(1);
+  }
+  break;
+  }
 
-  case Action::DELETE:
-    throw std::runtime_error("delete not implemented");
+  case Action::READ:{
+    try{
+    const std::string category = args.count("category") ? args["category"].as<std::string>() : "";
+    const std::string item = args.count("item") ? args["item"].as<std::string>() : "";
+    const std::string entry = args.count("entry") ? args["entry"].as<std::string>() : "";
+
+    if(category.empty() && item.empty() && entry.empty()){
+      std::cout<<getJSON(wObj)<<std::endl;
+    } else if(!category.empty() && item.empty() && entry.empty()){
+      std::cout<<getJSON(wObj, category)<<std::endl;
+    } else if(!category.empty() && !item.empty() && entry.empty()){
+      std::cout<<getJSON(wObj, category, item)<<std::endl;
+    } else {
+      std::cout<<getJSON(wObj, category, item, entry)<<std::endl;
+    }
+    
+    }catch(std::exception &e){
+      std::cerr << e.what() << std::endl;
+      std::exit(1);
+    }
     break;
+  }
+  case Action::UPDATE:{
+    try {
+      std::string category = args.count("category") ? args["category"].as<std::string>() : "";
+      std::string item = args.count("item") ? args["item"].as<std::string>() : "";
+      std::string entry = args.count("entry") ? args["entry"].as<std::string>() : "";
+
+
+      if(!category.empty() && item.empty() && entry.empty()) {
+        std::string delimiter = ":";
+
+        if(category.find(delimiter) != std::string::npos) {
+
+          std::string oldIdentifier = category.substr(0, category.find(delimiter));
+          std::string newIdentifier = category.substr(category.find(delimiter) + 1, category.size());
+
+          wObj.getCategory(oldIdentifier).setIdent(newIdentifier);
+          wObj.save(db);
+        } else {
+          std::cerr<< "Error: The delimiter is invalid.\n";
+          std::exit(1);
+        }
+      } else if(!category.empty() && !item.empty() && entry.empty()) {
+
+          std::string delimiter = ":";
+
+          if(item.find(delimiter) != std::string::npos) {
+
+            std::string oldIdentifier = item.substr(0, item.find(delimiter));
+            std::string newIdentifier = item.substr(item.find(delimiter) + 1, item.size());
+
+            wObj.getCategory(category).getItem(oldIdentifier).setIdent(newIdentifier);
+            wObj.save(db);
+          } else {
+            std::cerr<< "Error: The delimiter is invalid.\n";
+            std::exit(1);
+          }
+      } else {
+          std::string comaDelimiter = ",";
+          std::string colonDelimiter = ":";
+
+          if(entry.find(colonDelimiter) != std::string::npos && entry.find(comaDelimiter) != std::string::npos) {
+            if(entry.find(comaDelimiter) < entry.find(colonDelimiter)) {
+            std::string entryName = entry.substr(0, entry.find(comaDelimiter));
+            std::string newValue = entry.substr(entry.find(comaDelimiter) + 1, entry.find(colonDelimiter) - entry.find(comaDelimiter) - 1);
+            std::string newKey = entry.substr(entry.find(colonDelimiter) + 1, entry.size());
+
+
+
+            if(newValue.empty() || newKey.empty()) {
+              std::cerr<< "Error: invalid entry argument(s).\n";
+              std::exit(1);
+            }
+
+
+            wObj.getCategory(category).getItem(item).deleteEntry(entryName);
+            wObj.getCategory(category).getItem(item).addEntry(newKey, newValue);
+
+            wObj.save(db);
+            } else {
+            std::string entryName = entry.substr(0, entry.find(colonDelimiter));
+            std::string newKey = entry.substr(entry.find(colonDelimiter) + 1, entry.find(comaDelimiter) - entry.find(colonDelimiter) - 1);
+            std::string newValue = entry.substr(entry.find(comaDelimiter) + 1, entry.size());
+
+            if(newValue.empty() || newKey.empty()) {
+              std::cerr<< "Error: invalid entry argument(s).\n";
+              std::exit(1);
+            }
+
+
+            wObj.getCategory(category).getItem(item).deleteEntry(entryName);
+            wObj.getCategory(category).getItem(item).addEntry(newKey, newValue);
+
+            wObj.save(db);
+            }
+
+          } else if(entry.find(colonDelimiter) != std::string::npos) {
+
+            std::string entryName = entry.substr(0, entry.find(colonDelimiter));
+            std::string newKey = entry.substr(entry.find(colonDelimiter) + 1, entry.size());
+            std::string keyValue = wObj.getCategory(category).getItem(item).getEntry(entryName);
+
+            if(newKey.empty()) {
+              std::cerr<< "Error: invalid entry argument(s).\n";
+              std::exit(1);
+            }
+
+            wObj.getCategory(category).getItem(item).deleteEntry(entryName);
+            wObj.getCategory(category).getItem(item).addEntry(newKey, keyValue);
+            
+            wObj.save(db);
+
+
+          } else if(entry.find(comaDelimiter) != std::string::npos) {
+
+            std::string entryName = entry.substr(0, entry.find(comaDelimiter));
+            std::string newValue = entry.substr(entry.find(comaDelimiter) + 1, entry.size());
+
+            if(newValue.empty()) {
+              std::cerr<< "Error: invalid entry argument(s).\n";
+              std::exit(1);
+            }
+
+
+            wObj.getCategory(category).getItem(item).addEntry(entryName, newValue);
+            
+            wObj.save(db);
+
+          } else {
+            std::cerr<< "Error: Invalid delimiter\n";
+            std::exit(1);
+          }
+
+      }
+      break;
+    } catch(std::exception &e) {
+        std::cerr << e.what() << std::endl;
+        std::exit(1);
+    };
+  }
+
+  case Action::DELETE:{
+
+    try{
+    const std::string category = args.count("category") ? args["category"].as<std::string>() : "";
+    const std::string item = args.count("item") ? args["item"].as<std::string>() : "";
+    const std::string entry = args.count("entry") ? args["entry"].as<std::string>() : "";
+
+    if(category.empty() && item.empty() && entry.empty()){
+    std::cerr<< "Error: missing category, item or entry argument(s).";
+    std::exit(1);
+    } else if(!category.empty() && item.empty() && entry.empty()){
+      wObj.deleteCategory(category);
+      wObj.save(db);
+    } else if(!category.empty() && !item.empty() && entry.empty()){
+      wObj.getCategory(category).deleteItem(item);
+      wObj.save(db);
+    } else {
+      wObj.getCategory(category).getItem(item).deleteEntry(entry);
+      wObj.save(db);
+    }
+    } catch(std::exception &e){
+      std::cerr <<  e.what() << std::endl;
+      std::exit(1);
+    }
+    break;
+  }
 
   default:
     throw std::runtime_error("Unknown action not implemented");
+  }
+  } catch(std::exception &e){
+    std::cerr<< "Error: invalid action argument(s)."<< std::endl;
+    std::exit(1);
   }
 
   return 0;
@@ -117,7 +307,23 @@ cxxopts::Options App::cxxoptsSetup() {
   return cxxopts;
 }
 
-
+//Helper for the case-insensitive comparison of strings.
+bool compareChar(const char & c1, const char & c2)
+{
+    if (c1 == c2)
+        return true;
+    else if (std::toupper(c1) == std::toupper(c2))
+        return true;
+    return false;
+}
+/*
+ * Method to compare two string case insensitive.
+ */
+bool caseInSensStringCompare(const std::string & str1, const std::string &str2)
+{
+    return ( (str1.size() == str2.size() ) &&
+             std::equal(str1.begin(), str1.end(), str2.begin(), &compareChar) );
+}
 
 
 // TODO Rewrite this function so that it works. This function should
@@ -132,13 +338,13 @@ cxxopts::Options App::cxxoptsSetup() {
 App::Action App::parseActionArgument(cxxopts::ParseResult &args) {
   std::string input = args["action"].as<std::string>();
 
-  if(input == "create") {
+  if(caseInSensStringCompare(input, "create")) {
     return Action::CREATE;
-  } else if(input == "read") {
+  } else if(caseInSensStringCompare(input, "read")) {
     return Action::READ;
-  } else if(input == "update") {
+  } else if(caseInSensStringCompare(input, "update")) {
     return Action::UPDATE;
-  } else if(input == "delete") {
+  } else if(caseInSensStringCompare(input, "delete")) {
     return Action::DELETE;
   } else {
     throw std::invalid_argument("action");
@@ -157,9 +363,9 @@ App::Action App::parseActionArgument(cxxopts::ParseResult &args) {
 //  Wallet wObj{};
 //  std::cout << getJSON(wObj);
 std::string App::getJSON(Wallet &wObj) { 
-  return "{}";
+
   // Only uncomment this once you have implemented the functions used!
-  // return wObj.str();
+  return wObj.str();
 }
 
 // TODO Write a function, getJSON, that returns a std::string containing the
@@ -175,10 +381,10 @@ std::string App::getJSON(Wallet &wObj) {
 //  std::string c = "category argument value";
 //  std::cout << getJSON(wObj, c);
 std::string App::getJSON(Wallet &wObj, const std::string &c) {
-  return "{}";
+
   // Only uncomment this once you have implemented the functions used!
-  // auto cObj = wObj.getCategory(c);
-  // return cObj.str();
+  auto cObj = wObj.getCategory(c);
+  return cObj.str();
 }
 
 // TODO Write a function, getJSON, that returns a std::string containing the
@@ -196,11 +402,11 @@ std::string App::getJSON(Wallet &wObj, const std::string &c) {
 //  std::cout << getJSON(wObj, c, i);
 std::string App::getJSON(Wallet &wObj, const std::string &c,
                          const std::string &i) {
-  return "{}";
+
   // Only uncomment this once you have implemented the functions used!
-  // auto cObj = wObj.getCategory(c);
-  // const auto iObj = cObj.getItem(i);
-  // return iObj.str();
+  auto cObj = wObj.getCategory(c);
+  const auto iObj = cObj.getItem(i);
+  return iObj.str();
 }
 
 // TODO Write a function, getJSON, that returns a std::string containing the
@@ -219,9 +425,9 @@ std::string App::getJSON(Wallet &wObj, const std::string &c,
 //  std::cout << getJSON(wObj, c, i, e);
 std::string App::getJSON(Wallet &wObj, const std::string &c,
                          const std::string &i, const std::string &e) {
-  return "{}";
+
   // Only uncomment this once you have implemented the functions used!
-  // auto cObj = wObj.getCategory(c);
-  // auto iObj = cObj.getItem(i);
-  // return iObj.getEntry(e);
+  auto cObj = wObj.getCategory(c);
+  auto iObj = cObj.getItem(i);
+  return iObj.getEntry(e);
 }

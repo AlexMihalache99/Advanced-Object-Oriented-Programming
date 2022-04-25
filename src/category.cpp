@@ -2,7 +2,7 @@
 // CSC371 Advanced Object Oriented Programming (2021/22)
 // Department of Computer Science, Swansea University
 //
-// Author: 984174
+// Author: 986965
 //
 // Canvas: https://canvas.swansea.ac.uk/courses/24793
 // -----------------------------------------------------
@@ -82,7 +82,7 @@ const std::vector<Item> &Category::getItems() const
 //  cObj.newItem("itemIdent");
 Item &Category::newItem(const std::string &itemIdent)
 {
-
+    //checks if the item already exists
     const auto &it = std::find_if(this->items.begin(),
                                  this->items.end(), 
                                  [&itemIdent](Item &current)
@@ -104,6 +104,7 @@ Item &Category::newItem(const std::string &itemIdent)
 
         this->items.push_back(itemToAdd);
 
+        //checks if the item has been added
         const auto &itNew = std::find_if(this->items.begin(),
                                 this->items.end(), 
                                 [&itemIdent](Item &current)
@@ -127,6 +128,7 @@ Item &Category::newItem(const std::string &itemIdent)
 //  cObj.addItem(iObj);
 bool Category::addItem(const Item &itemToAdd)
 {
+    //checks if the item already exists
     const auto &it = std::find_if(this->items.begin(),
                                  this->items.end(), 
                                  [&itemToAdd](Item &current)
@@ -139,11 +141,6 @@ bool Category::addItem(const Item &itemToAdd)
         for(const auto &currentValue: itemToAdd.getEntries()) {
             (*it).addEntry(currentValue.first, currentValue.second);
         }
-
-        // (*it).getEntries().insert(itemToAdd.getEntries().begin(), itemToAdd.getEntries().end());
-        // for(const auto& currentValue: (*it).getEntries()) {
-
-        // }
 
         return false;
     } else {
@@ -167,6 +164,7 @@ bool Category::addItem(const Item &itemToAdd)
 //  auto iObj = cObj.getItem("itemIdent");
 Item &Category::getItem(const std::string &itemToRetrieve)
 {
+    //checks if the item alredy exists
     const auto &it = std::find_if(this->items.begin(),
                                  this->items.end(), 
                                  [&itemToRetrieve](Item &current)
@@ -177,7 +175,13 @@ Item &Category::getItem(const std::string &itemToRetrieve)
     if(it != this->items.end()) {
         return *it;
     } else {
-        throw std::out_of_range("action");
+
+        if(itemToRetrieve.length() != 0){
+            throw std::out_of_range("Error: invalid item argument(s).");
+        } else {
+             throw std::invalid_argument("Error: missing item argument(s).");
+        }
+        
     }
 }
 
